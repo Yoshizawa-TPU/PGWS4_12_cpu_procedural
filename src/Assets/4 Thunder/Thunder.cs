@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Thunder : MonoBehaviour
 {
-    [SerializeField] Material material = default!;
     [SerializeField] MeshFilter meshFilter = default!;
+    [SerializeField] Material material = default!;
     Texture2D texture = null;
     [SerializeField] int TEX_WIDTH = 128;
     [SerializeField] int TEX_HEIGHT = 64;
@@ -19,8 +19,8 @@ public class Thunder : MonoBehaviour
         texture = new Texture2D(TEX_WIDTH, TEX_HEIGHT, TextureFormat.RGBA32, false);
         material.SetTexture("_Texture2D", texture);
 
-        lichtenberg = new ThunderNewEmptyCSharpScript(TEX_HEIGHT, TEX_WIDTH, ThunderNewEmptyCSharpScript.MODE.FINISH_AT_FIRST_ARRIVE);
 
+        lichtenberg = new ThunderNewEmptyCSharpScript(TEX_HEIGHT, TEX_WIDTH, ThunderNewEmptyCSharpScript.MODE.FINISH_AT_FIRST_ARRIVE);
         UpdateTexture();
     }
 
@@ -43,6 +43,7 @@ public class Thunder : MonoBehaviour
         while (lichtenberg.Update() == ThunderNewEmptyCSharpScript.State.Running) ;
         UpdateTexture();
         List<int> path = new List<int>();
+
         int p = lichtenberg.ArriveIndex;
         while (lichtenberg.Parent[p] != p)
         {
@@ -50,13 +51,12 @@ public class Thunder : MonoBehaviour
             p = lichtenberg.Parent[p];
         }
         path.Add(p);
-
         updateMesh(path);
     }
 
     void UpdateTexture()
     {
-        var pixeData = texture.GetPixelData<Color32>(0);
+        var pixelData = texture.GetPixelData<Color32>(0);
 
         ushort[] value = lichtenberg.Value;
         double vMax = (double)lichtenberg.ValueMax;
@@ -67,7 +67,7 @@ public class Thunder : MonoBehaviour
             for (int x = 0; x < TEX_WIDTH; x++)
             {
                 byte c = (byte)(256.0 * (double)value[idx] / (vMax + 1));
-                pixeData[idx] = new Color32(c, c, c, 255);
+                pixelData[idx] = new Color32(c, c, c, 255);
                 idx++;
             }
         }
@@ -78,105 +78,94 @@ public class Thunder : MonoBehaviour
     void updateMesh(List<int> path)
     {
         int n = path.Count;
-        int vertexCount = 2 * (n + 2); 
+
+        int vertexCount = 2 * (n + 2);
         Vector3[] vertices = new Vector3[vertexCount];
         float SIZE = 1000.0f / (float)TEX_HEIGHT;
         float halfWidth = SIZE * 0.5f;
 
         int vtx = 0;
-        for (int i = 0; i < n; i++)
         {
-        int index = path[0];
-            int x = index % TEX_WIDTH - TEX_HEIGHT / 2;
+            int index = path[0];
+            int x = index % TEX_WIDTH - TEX_WIDTH / 2;
             Vector3 center = new Vector3(halfWidth * 2.0f * (float)x, 0.0f, 0.0f);
             vertices[vtx + 0] = center + Vector3.left * halfWidth;
             vertices[vtx + 1] = center - Vector3.left * halfWidth;
-
             vtx += 2;
-
         }
-
-        for(int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
         {
             int index = path[i];
-            int x = index % TEX_WIDTH - TEX_HEIGHT / 2;
-            int y = TEX_HEIGHT;
-            Vector3 center = new Vector3(halfWidth*2.0f*(float)x, SIZE * (0.5f+(float)y), 0.0f);
-
+            int x = index % TEX_WIDTH - TEX_WIDTH / 2;
+            int y = index / TEX_WIDTH;
+            Vector3 center = new Vector3(halfWidth * 2.0f * (float)x, SIZE * (0.5f + (float)y), 0.0f);
             Vector3 right;
-            if(i == 0)
+            if (i == 0)
             {
                 int nextIndex = path[1];
                 int nextX = nextIndex % TEX_WIDTH;
                 int nextY = nextIndex / TEX_WIDTH;
                 int prevIndex = path[0];
                 int prevX = prevIndex % TEX_WIDTH;
-                int prevY = prevIndex / TEX_WIDTH-1;
+                int prevY = prevIndex / TEX_WIDTH - 1;
                 right = new Vector3(-(float)(nextY - prevY), (float)(nextX - prevX), 0.0f);
             }
-            else if(i<n-1)
+            else if (i < n - 1)
             {
-                int nextIndex = path[i+1];
+                int nextIndex = path[i + 1];
                 int nextX = nextIndex % TEX_WIDTH;
                 int nextY = nextIndex / TEX_WIDTH;
-                int prevIndex = path[i-1];
+                int prevIndex = path[i - 1];
                 int prevX = prevIndex % TEX_WIDTH;
-                int prevY = prevIndex / TEX_WIDTH - 1;
+                int prevY = prevIndex / TEX_WIDTH;
                 right = new Vector3(-(float)(nextY - prevY), (float)(nextX - prevX), 0.0f);
             }
             else
             {
-                int nextIndex = path[n-1];
+                int nextIndex = path[n - 1];
                 int nextX = nextIndex % TEX_WIDTH;
-                int nextY = nextIndex / TEX_WIDTH;
-                int prevIndex = path[n-2];
+                int nextY = nextIndex / TEX_WIDTH + 1;
+                int prevIndex = path[n - 2];
                 int prevX = prevIndex % TEX_WIDTH;
-                int prevY = prevIndex / TEX_WIDTH - 1;
+                int prevY = prevIndex / TEX_WIDTH;
                 right = new Vector3(-(float)(nextY - prevY), (float)(nextX - prevX), 0.0f);
             }
-
-            vertices[vtx + 0] = center + right * 2.0f *halfWidth/Vector3.Dot(right,right);
+            vertices[vtx + 0] = center + right * 2.0f * halfWidth / Vector3.Dot(right, right);
             vertices[vtx + 1] = center - right * 2.0f * halfWidth / Vector3.Dot(right, right);
             vtx += 2;
         }
-
-        for(int i = 0; i < n; i++)
         {
-            int index = path[n-1];
-            int x = index % TEX_WIDTH - TEX_HEIGHT / 2;
+            int index = path[n - 1];
+            int x = index % TEX_WIDTH - TEX_WIDTH / 2;
             int y = TEX_HEIGHT;
             Vector3 center = new Vector3(halfWidth * 2.0f * (float)x, SIZE * (float)TEX_HEIGHT, 0.0f);
             vertices[vtx + 0] = center + Vector3.left * halfWidth;
             vertices[vtx + 1] = center - Vector3.left * halfWidth;
             vtx += 2;
-
         }
 
         Color[] colors = new Color[vertexCount];
         for (int i = 0; i < vertexCount; i++)
         {
             colors[i] = Color.white;
-        
         }
-
-        int polygonCount = 2 * n + 1;
+        int polygonCount = 2 * (n + 1);
         int[] triangles = new int[3 * polygonCount];
         int idx = 0;
         vtx = 0;
         while (idx < 3 * polygonCount)
         {
-            triangles[idx+0] = vtx+0;
-            triangles[idx+1] = vtx+2;
-            triangles[idx+2] = vtx+1;
+            triangles[idx + 0] = vtx + 0;
+            triangles[idx + 1] = vtx + 2;
+            triangles[idx + 2] = vtx + 1;
 
-            triangles[idx+3] = vtx+1;
-            triangles[idx+4] = vtx+2;
-            triangles[idx+5] = vtx+3;
+            triangles[idx + 3] = vtx + 1;
+            triangles[idx + 4] = vtx + 2;
+            triangles[idx + 5] = vtx + 3;
 
             idx += 6;
             vtx += 2;
         }
-    
         Mesh Mesh = meshFilter.mesh;
 
         Mesh.Clear();
