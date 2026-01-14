@@ -26,13 +26,14 @@ public class RandomWalk : MonoBehaviour
         if (time <= 0.0f)
         {
             Generate();
-            time = Random.Range(1.0f, 3.0f);
+            time = 3.0f;
+            //time = Random.Range(1.0f, 5.0f);
         }
     }
 
     void Generate()
     {
-        float HEIGHT = 1000.0f;
+        float HEIGHT = Random.Range(500f,1000f);
         Vector3 pos = new Vector3(0.0f, HEIGHT, 0.0f);
         Vector3 dir = Vector3.down;
         List<Vector3> path = new List<Vector3>();
